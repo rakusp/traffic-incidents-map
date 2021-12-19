@@ -1,15 +1,16 @@
-package traffic.api;
+package main.java.traffic.api;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.net.http.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+
 import org.json.*;
 
 public class GetData {
-    public static void Get(double minLon, double minLat, double maxLon, double maxLat) {
+    public static List<Incident> get(double minLon, double minLat, double maxLon, double maxLat) {
         try {
             // Tymczasowo tak ale te klucze wypada jakoś chronić potem xD
             String APIkey = "aTNN9zA6QOTb4DGHuRWUpQGEk8KmE91p";
@@ -39,13 +40,16 @@ public class GetData {
             // Tworzenie JSONA i dostawanie się do obiektów
             // https://stackoverflow.com/questions/2591098/how-to-parse-json-in-java
             JSONObject obj = new JSONObject(response.body());
-            System.out.println("Body: ");
-            System.out.println(obj.toString(2));
+            JSONArray jsonList = obj.getJSONArray("incidents");
 
-            System.out.println(obj.getJSONArray("incidents"));
+
+            return Cast.cast(jsonList);
+
 
         } catch (URISyntaxException | InterruptedException | IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
+
 }
