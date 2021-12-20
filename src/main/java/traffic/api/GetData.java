@@ -1,12 +1,14 @@
-package main.java.traffic.api;
+package traffic.api;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.net.http.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-
 import org.json.*;
 
 public class GetData {
@@ -23,10 +25,14 @@ public class GetData {
                     "incidentDetails?" +
                     "key=" + APIkey + "&" +
                     "bbox=" + bbox + "&" +
-                    URLEncoder.encode("fields={incidents{type,geometry{type,coordinates}," +
-                            "properties{id,iconCategory,magnitudeOfDelay,events{description,code}," +
-                            "startTime,endTime,from,to,length,delay,roadNumbers,aci{probabilityOfOccurrence," +
-                            "numberOfReports,lastReportTime}}}}", "UTF-8");
+                    "fields=" +
+                    URLEncoder.encode("{incidents{type,geometry{type,coordinates}," +
+                            "properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory}," +
+                            "startTime,endTime,from,to,length,delay,roadNumbers,timeValidity," +
+                            "aci{probabilityOfOccurrence,numberOfReports,lastReportTime}," +
+                            "tmc{countryCode,tableNumber,tableVersion,direction,points{location,offset}}}}}", StandardCharsets.UTF_8) + "&" +
+                            "categoryFilter=0,1,2,3,4,5,6,7,8,9,10,11,14" + "&" +
+                            "timeValidityFilter=present,future";
 
             System.out.println("URL: " + uri);
 

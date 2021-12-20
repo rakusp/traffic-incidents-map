@@ -1,4 +1,4 @@
-package main.java.traffic.api;
+package traffic.api;
 
 import java.util.Arrays;
 
