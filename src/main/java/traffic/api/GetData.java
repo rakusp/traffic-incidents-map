@@ -47,9 +47,7 @@ public class GetData {
             // https://stackoverflow.com/questions/2591098/how-to-parse-json-in-java
             JSONObject obj = new JSONObject(response.body());
             JSONArray jsonList = obj.getJSONArray("incidents");
-
-
-            return Cast.cast(jsonList);
+            return Json.cast(jsonList);
 
 
         } catch (URISyntaxException | InterruptedException | IOException e) {

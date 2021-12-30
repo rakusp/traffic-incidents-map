@@ -1,6 +1,8 @@
 package traffic.api;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -13,7 +15,7 @@ public class Incident {
     Properties properties;
 
 
-    public class Geometry {
+    public static class Geometry {
         @JsonProperty
         Double[][] coordinates;
         @JsonProperty
@@ -28,14 +30,51 @@ public class Incident {
         }
     }
 
-    public class Properties {
+    public static class Properties {
         @JsonProperty
-        Integer iconCategory;
+        List<String> roadNumbers;
+        @JsonProperty
+        String timeValidity;
+        @JsonProperty
+        LocalDateTime startTime;
+        @JsonProperty
+        String from;
+        @JsonProperty
+        LocalDateTime endTime;
+        @JsonProperty
+        String to;
+        @JsonProperty
+        Events[] events;
+
+        public static class Events{
+            @JsonProperty
+            Integer code;
+            @JsonProperty
+            String description;
+            @JsonProperty
+            Integer iconCategory;
+
+            @Override
+            public String toString() {
+                return "Events{" +
+                        "code=" + code +
+                        ", description='" + description + '\'' +
+                        ", iconCategory=" + iconCategory +
+                        '}';
+            }
+        }
+
 
         @Override
         public String toString() {
             return "Properties{" +
-                    "iconCategory=" + iconCategory +
+                    "roadNumbers=" + roadNumbers +
+                    ", timeValidity='" + timeValidity + '\'' +
+                    ", startTime=" + startTime +
+                    ", from='" + from + '\'' +
+                    ", endTime=" + endTime +
+                    ", to='" + to + '\'' +
+                    ", events=" + Arrays.toString(events) +
                     '}';
         }
     }
@@ -48,4 +87,5 @@ public class Incident {
                 ", properties=" + properties +
                 '}';
     }
+
 }
