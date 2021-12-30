@@ -15,10 +15,10 @@ public class Json {
 
     private static final ObjectMapper objectMapper = getObjectMapper();
 
-    private static ObjectMapper getObjectMapper(){
+    private static ObjectMapper getObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return objectMapper;
     }
 
@@ -27,10 +27,10 @@ public class Json {
     }
 
     public static <A> A fromJson(JsonNode node, Class<A> clazz) throws JsonProcessingException {
-        return objectMapper.treeToValue(node,clazz);
+        return objectMapper.treeToValue(node, clazz);
     }
 
-    public static String jsonToString(JSONObject jsonObject){
+    public static String jsonToString(JSONObject jsonObject) {
         return jsonObject.toString(2);
     }
 

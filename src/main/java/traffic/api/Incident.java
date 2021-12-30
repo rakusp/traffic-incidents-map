@@ -46,7 +46,7 @@ public class Incident {
         @JsonProperty
         Events[] events;
 
-        public static class Events{
+        public static class Events {
             @JsonProperty
             Integer code;
             @JsonProperty
