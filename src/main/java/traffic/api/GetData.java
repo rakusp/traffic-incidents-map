@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import org.json.*;
 
 public class GetData {
@@ -30,8 +31,8 @@ public class GetData {
                             "startTime,endTime,from,to,length,delay,roadNumbers,timeValidity," +
                             "aci{probabilityOfOccurrence,numberOfReports,lastReportTime}," +
                             "tmc{countryCode,tableNumber,tableVersion,direction,points{location,offset}}}}}", StandardCharsets.UTF_8) + "&" +
-                            "categoryFilter=0,1,2,3,4,5,6,7,8,9,10,11,14" + "&" +
-                            "timeValidityFilter=present,future";
+                    "categoryFilter=0,1,2,3,4,5,6,7,8,9,10,11,14" + "&" +
+                    "timeValidityFilter=present,future";
 
             System.out.println("URL: " + uri);
 
