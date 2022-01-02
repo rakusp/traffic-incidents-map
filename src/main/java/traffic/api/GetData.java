@@ -14,7 +14,6 @@ import org.json.*;
 public class GetData {
     public static List<Incident> get(double minLon, double minLat, double maxLon, double maxLat) {
         try {
-            // Tymczasowo tak ale te klucze wypada jakoś chronić potem xD
             String APIkey = "aTNN9zA6QOTb4DGHuRWUpQGEk8KmE91p";
             String bbox = minLon + "," + minLat + "," + maxLon + "," + maxLat;
             System.out.println("Coordinates: " + bbox);
