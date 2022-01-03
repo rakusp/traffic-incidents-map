@@ -2,9 +2,12 @@ package traffic.map;
 
 import com.sothawo.mapjfx.Projection;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.MouseDragEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +49,14 @@ public class InteractiveMap extends Application {
         logger.debug("application start method finished.");
 
         // adding markes at runtime test
-        scene.setOnMouseClicked(mouseEvent -> controller.addMarker());
+//        scene.setOnMouseClicked(mouseEvent -> controller.addMarker());
+        primaryStage.addEventHandler(MouseDragEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseDragEvent) {
+                System.out.println("test");
+                controller.addMarker();
+            }
+        });
     }
 }
 

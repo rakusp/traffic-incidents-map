@@ -6,8 +6,11 @@ import com.sothawo.mapjfx.event.MapViewEvent;
 import com.sothawo.mapjfx.event.MarkerEvent;
 import com.sothawo.mapjfx.offline.OfflineCache;
 import javafx.animation.AnimationTimer;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
@@ -20,6 +23,8 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseDragEvent;
+import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -50,8 +55,10 @@ public class Controller {
 
     // default zoom level
     private static final int ZOOM_DEFAULT = 14;
+    private double oldZoomLevel = ZOOM_DEFAULT;
 
     // markers
+    private ArrayList<Marker> markerList = new ArrayList<>();
     private final Marker markerPalace;
 
     // label
@@ -225,6 +232,15 @@ public class Controller {
         // add markers
         mapView.addMarker(markerPalace);
 
+        // zoom listener
+        InvalidationListener zoomListener =
+                (zoomLevel) -> {
+                    if(((SimpleDoubleProperty) zoomLevel).getValue() < oldZoomLevel) updateMarkers();
+                    oldZoomLevel = ((SimpleDoubleProperty) zoomLevel).getValue();
+                };
+        mapView.zoomProperty().addListener(zoomListener);
+
+
         // enable the controls
         setControlsDisable(false);
     }
@@ -234,5 +250,10 @@ public class Controller {
         Marker testMarker = Marker.createProvided(Marker.Provided.RED).setPosition(testCoord).setVisible(
                 true);
         mapView.addMarker(testMarker);
+    }
+
+    // TODO
+    private void updateMarkers() {
+        logger.info("updating markers...");
     }
 }
