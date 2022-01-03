@@ -12,5 +12,5 @@ module traffic {
     requires com.fasterxml.jackson.datatype.jsr310;
 
     opens traffic.map;
-
+    opens traffic.api;
 }
