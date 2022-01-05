@@ -1,48 +1,29 @@
 package traffic.map;
 
 import com.sothawo.mapjfx.*;
-import com.sothawo.mapjfx.event.MapLabelEvent;
-import com.sothawo.mapjfx.event.MapViewEvent;
 import com.sothawo.mapjfx.event.MarkerEvent;
 import com.sothawo.mapjfx.offline.OfflineCache;
-import javafx.animation.AnimationTimer;
-import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Accordion;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
-import javafx.scene.input.ZoomEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.util.Duration;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 public class Controller {
@@ -55,43 +36,30 @@ public class Controller {
 
     // default zoom level
     private static final int ZOOM_DEFAULT = 14;
-    private double oldZoomLevel = ZOOM_DEFAULT;
+
+    @FXML
+    private Text incidentType;
 
     // markers
     private ArrayList<Marker> markerList = new ArrayList<>();
     private final Marker markerPalace;
 
-    // label
-    private final MapLabel labelPalace;
-
-
-    @FXML
-    /** button to set the map's zoom. */
-    private Button buttonZoom;
-
-    /** the MapView containing the map */
+    // map
     @FXML
     private MapView mapView;
 
-    /** the box containing the top controls, must be enabled when mapView is initialized */
     @FXML
-    private HBox topControls;
+    private TitledPane incidentInfo;
 
-    /** Slider to change the zoom value */
+    // controls on the left
     @FXML
-    private Slider sliderZoom;
+    private VBox leftControls;
 
-    /** Accordion for all the different options */
     @FXML
-    private Accordion leftControls;
+    private TitledPane mapControls;
 
-    /** section containing the location button */
     @FXML
-    private TitledPane optionsLocations;
-
-    /** button to set the map's center */
-    @FXML
-    private Button buttonPalace;
+    private TitledPane optionsFilters;
 
     /** Label to display the current center */
     @FXML
@@ -109,9 +77,20 @@ public class Controller {
     @FXML
     private Label labelEvent;
 
-    /** Check button for palace marker */
     @FXML
-    private CheckBox checkPalaceMarker;
+    private Button clearButton;
+
+    @FXML
+    private HBox zoomControl;
+
+    @FXML
+    private Button zoomIn;
+
+    @FXML
+    private Button zoomOut;
+
+    @FXML
+    private StackPane stackPane;
 
     // parameters for XYZ server
     private XYZParam xyzParams = new XYZParam()
@@ -125,7 +104,9 @@ public class Controller {
                 true);
 
         // custom label
-        labelPalace = new MapLabel("Palace of Culture and Science", 10, -10).setVisible(false).setCssClass("green-label");
+        // label
+        MapLabel labelPalace = new MapLabel("Palace of Culture and Science",
+                10, -10).setVisible(false).setCssClass("green-label");
 
         markerPalace.attachLabel(labelPalace);
     }
@@ -155,19 +136,10 @@ public class Controller {
         // set the custom css file for the MapView
         mapView.setCustomMapviewCssURL(getClass().getResource("/custom_mapview.css"));
 
-        leftControls.setExpandedPane(optionsLocations);
-
         // set the controls to disabled, this will be changed when the MapView is intialized
         setControlsDisable(true);
 
-        // wire up the location button
-        buttonPalace.setOnAction(event -> mapView.setCenter(coordPalace));
-
-        // wire the zoom button and connect the slider to the map's zoom
-        buttonZoom.setOnAction(event -> mapView.setZoom(ZOOM_DEFAULT));
-        sliderZoom.valueProperty().bindBidirectional(mapView.zoomProperty());
-
-        // bind the map's center and zoom properties to the corresponding labels and format them
+        // display map's properties
         labelCenter.textProperty().bind(Bindings.format("center: %s", mapView.centerProperty()));
         labelZoom.textProperty().bind(Bindings.format("zoom: %.0f", mapView.zoomProperty()));
         logger.debug("options and labels done");
@@ -185,26 +157,34 @@ public class Controller {
 
         setupEventHandlers();
 
-        // marker visibility
-        checkPalaceMarker.selectedProperty().bindBidirectional(markerPalace.visibleProperty());
-
-        // finally initialize the map view
+        // initialize the map view
         logger.debug("start map initialization");
         mapView.initialize(Configuration.builder()
                 .projection(projection)
                 .showZoomControls(false)
                 .build());
 
+        // add images
+        logger.debug("starting image initialization");
+        try {
+            initImages();
+        } catch(Exception e) {
+            logger.warn("FAILED TO LOAD IMAGES");
+        }
+
+        // zoom buttons alignment
+        StackPane.setAlignment(zoomControl, Pos.TOP_RIGHT);
+
         logger.debug("initialization finished");
     }
 
-    /**
-     * initializes the event handlers.
-     */
+    // initialize event handlers
     private void setupEventHandlers() {
 
         mapView.addEventHandler(MarkerEvent.MARKER_CLICKED, event -> {
             event.consume();
+            incidentInfo.setExpanded(true);
+            incidentType.setText("Wypadek");
             labelEvent.setText("Event: marker clicked: " + event.getMarker().getId());
         });
         mapView.addEventHandler(MarkerEvent.MARKER_RIGHTCLICKED, event -> {
@@ -217,7 +197,6 @@ public class Controller {
 
     // enables/disables control buttons
     private void setControlsDisable(boolean flag) {
-        topControls.setDisable(flag);
         leftControls.setDisable(flag);
     }
 
@@ -233,27 +212,92 @@ public class Controller {
         mapView.addMarker(markerPalace);
 
         // zoom listener
-        InvalidationListener zoomListener =
-                (zoomLevel) -> {
-                    if(((SimpleDoubleProperty) zoomLevel).getValue() < oldZoomLevel) updateMarkers();
-                    oldZoomLevel = ((SimpleDoubleProperty) zoomLevel).getValue();
-                };
-        mapView.zoomProperty().addListener(zoomListener);
+        mapView.zoomProperty().addListener((observableValue, oldZoom, currZoom) -> {
+            if((double)currZoom < (double)oldZoom) updateMarkers();
+        }
+        );
 
 
         // enable the controls
         setControlsDisable(false);
     }
 
+    private void initImages() {
+        File file = new File(getClass().getResource("/img/filter.png").getFile());
+        Image image = new Image(file.toURI().toString(), 12, 12, false, true);
+        ImageView iv = new ImageView(image);
+        optionsFilters.setGraphic(iv);
+        optionsFilters.setContentDisplay(ContentDisplay.RIGHT);
+
+        file = new File(getClass().getResource("/img/clear.png").getFile());
+        image = new Image(file.toURI().toString(), 15, 15, false, true);
+        iv = new ImageView(image);
+        iv.setFitWidth(10);
+        clearButton.setGraphic(iv);
+        clearButton.setContentDisplay(ContentDisplay.RIGHT);
+
+        file = new File(getClass().getResource("/img/control.png").getFile());
+        image = new Image(file.toURI().toString(), 15, 15, false, true);
+        iv = new ImageView(image);
+
+        mapControls.setGraphic(iv);
+        mapControls.setContentDisplay(ContentDisplay.RIGHT);
+
+        file = new File(getClass().getResource("/img/plus.png").getFile());
+        image = new Image(file.toURI().toString(), 23, 25, false, true);
+        iv = new ImageView(image);
+        zoomIn.setGraphic(iv);
+
+        file = new File(getClass().getResource("/img/minus.png").getFile());
+        image = new Image(file.toURI().toString(), 23, 25, false, true);
+        iv = new ImageView(image);
+        zoomOut.setGraphic(iv);
+    }
+
+    @FXML
+    private void raiseOpacity() {
+        zoomIn.setOpacity(0.8);
+        zoomOut.setOpacity(0.8);
+    }
+
+    @FXML
+    private void lowerOpacity() {
+        zoomIn.setOpacity(0.5);
+        zoomOut.setOpacity(0.5);
+    }
+
+    @FXML
+    private void zoomIn() {
+        mapView.setZoom(mapView.getZoom() + 1);
+    }
+
+    @FXML
+    private void zoomOut() {
+        mapView.setZoom(mapView.getZoom() - 1);
+        updateMarkers();
+    }
+
     public void addMarker() {
         Coordinate testCoord = new Coordinate(52.25, 21.006389);
         Marker testMarker = Marker.createProvided(Marker.Provided.RED).setPosition(testCoord).setVisible(
                 true);
+//        markerList.add(testMarker);
         mapView.addMarker(testMarker);
+        logger.info("marker added");
     }
 
-    // TODO
+
     private void updateMarkers() {
         logger.info("updating markers...");
+    }
+
+    @FXML
+    private void applyFilters() {
+        logger.info("applying filters...");
+    }
+
+    @FXML
+    private void clearMap() {
+        logger.info("clearing map...");
     }
 }
