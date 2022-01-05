@@ -4,13 +4,20 @@ import com.sothawo.mapjfx.Projection;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.net.URL;
 
 public class InteractiveMap extends Application {
 
@@ -27,8 +34,8 @@ public class InteractiveMap extends Application {
         logger.info("starting InteractiveMap");
         String fxmlFile = "/fxml/InteractiveMap.fxml";
         logger.debug("loading fxml file {}", fxmlFile);
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
-        fxmlLoader.setController(new Controller());
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(InteractiveMap.class.getResource(fxmlFile));
         Parent rootNode = fxmlLoader.load();
         logger.debug("fxml file loaded successfully");
 
@@ -43,6 +50,8 @@ public class InteractiveMap extends Application {
 
         primaryStage.setTitle("Traffic Incidents Visualization");
         primaryStage.setScene(scene);
+        primaryStage.setMaximized(true);
+
         logger.debug("showing scene");
         primaryStage.show();
 
