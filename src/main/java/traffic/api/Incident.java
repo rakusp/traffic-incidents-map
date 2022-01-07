@@ -32,6 +32,8 @@ public class Incident {
 
     public static class Properties {
         @JsonProperty
+        String id;
+        @JsonProperty
         List<String> roadNumbers;
         @JsonProperty
         String timeValidity;
@@ -68,7 +70,8 @@ public class Incident {
         @Override
         public String toString() {
             return "Properties{" +
-                    "roadNumbers=" + roadNumbers +
+                    "id=" + id +
+                    ", roadNumbers=" + roadNumbers +
                     ", timeValidity='" + timeValidity + '\'' +
                     ", startTime=" + startTime +
                     ", from='" + from + '\'' +
