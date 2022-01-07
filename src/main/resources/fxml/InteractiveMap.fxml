@@ -39,16 +39,19 @@
             <Label fx:id="labelCenter" text="Center: "/>
             <Label fx:id="labelExtent" text="Extent: "/>
             <Label fx:id="labelZoom" text="Zoom: "/>
-            <Label fx:id="labelEvent" text="Event: "/>
         </HBox>
     </bottom>
     <left>
-        <VBox fx:id="leftControls" BorderPane.alignment="CENTER" minWidth="200">
+        <VBox fx:id="leftControls" BorderPane.alignment="CENTER" minWidth="250">
             <children>
                 <TitledPane fx:id="incidentInfo" text="Incident details">
                     <VBox spacing="5.0">
-                        <Text fx:id="incidentType" text="Incident: ---"/>
-                        <Text fx:id="incidentStreet" text="Street: ---"/>
+                        <Text fx:id="incidentType" text="Incident:"/>
+                        <Text fx:id="incidentFrom" text="From:"/>
+                        <Text fx:id="incidentTo" text="To:"/>
+                        <Text fx:id="incidentRoad" text="Road numbers:"/>
+                        <Text fx:id="incidentStart" text="Start time:"/>
+                        <Text fx:id="incidentEnd" text="End time:"/>
                     </VBox>
                 </TitledPane>
                 <TitledPane fx:id="optionsFilters" text="Filters">
@@ -58,6 +61,8 @@
                 </TitledPane>
                 <TitledPane fx:id="mapControls" text="Settings">
                     <VBox spacing="10.0">
+                        <ToggleButton fx:id="updateButton" text="Marker updates: ON" onAction="#updateToggle"
+                                      maxWidth="Infinity"/>
                         <Button fx:id="clearButton" text="Clear map" onAction="#clearMap" maxWidth="Infinity"/>
                     </VBox>
                 </TitledPane>
