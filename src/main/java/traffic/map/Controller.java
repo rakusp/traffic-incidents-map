@@ -1,29 +1,36 @@
 package traffic.map;
 
 import com.sothawo.mapjfx.*;
+import com.sothawo.mapjfx.event.MapViewEvent;
 import com.sothawo.mapjfx.event.MarkerEvent;
 import com.sothawo.mapjfx.offline.OfflineCache;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.TitledPane;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseDragEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import traffic.api.GetData;
+import traffic.api.Incident;
+import traffic.triplet.Triplet;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Controller {
@@ -37,19 +44,15 @@ public class Controller {
     // default zoom level
     private static final int ZOOM_DEFAULT = 14;
 
-    @FXML
-    private Text incidentType;
-
     // markers
-    private ArrayList<Marker> markerList = new ArrayList<>();
-    private final Marker markerPalace;
+    private HashMap<String, Triplet<Incident, Marker, CoordinateLine>> markerMap = new HashMap<>();
+    private HashMap<String, Incident> markerToIncident = new HashMap<>();
+
+    private Extent oldExtent;
 
     // map
     @FXML
     private MapView mapView;
-
-    @FXML
-    private TitledPane incidentInfo;
 
     // controls on the left
     @FXML
@@ -73,10 +76,6 @@ public class Controller {
     @FXML
     private Label labelZoom;
 
-    /** label to display the last event. */
-    @FXML
-    private Label labelEvent;
-
     @FXML
     private Button clearButton;
 
@@ -90,7 +89,27 @@ public class Controller {
     private Button zoomOut;
 
     @FXML
+    private ToggleButton updateButton;
+
+    @FXML
     private StackPane stackPane;
+
+    private DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+    @FXML
+    private TitledPane incidentInfo;
+    @FXML
+    private Text incidentType;
+    @FXML
+    private Text incidentFrom;
+    @FXML
+    private Text incidentTo;
+    @FXML
+    private Text incidentRoad;
+    @FXML
+    private Text incidentStart;
+    @FXML
+    private Text incidentEnd;
+
 
     // parameters for XYZ server
     private XYZParam xyzParams = new XYZParam()
@@ -99,16 +118,6 @@ public class Controller {
                     "'Tiles &copy; <a href=\"https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer\">ArcGIS</a>'");
 
     public Controller() {
-        // using provided marker
-        markerPalace = Marker.createProvided(Marker.Provided.BLUE).setPosition(coordPalace).setVisible(
-                true);
-
-        // custom label
-        // label
-        MapLabel labelPalace = new MapLabel("Palace of Culture and Science",
-                10, -10).setVisible(false).setCssClass("green-label");
-
-        markerPalace.attachLabel(labelPalace);
     }
 
     /**
@@ -181,15 +190,27 @@ public class Controller {
     // initialize event handlers
     private void setupEventHandlers() {
 
+        mapView.addEventHandler(MapViewEvent.MAP_BOUNDING_EXTENT, event -> {
+            event.consume();
+            labelExtent.setText(event.getExtent().toString());
+            if(newExtentBigger(event.getExtent())) {
+                logger.info("extent bounds expanded");
+                oldExtent = event.getExtent();
+                if(!updateButton.isSelected()) updateMarkers(oldExtent);
+            }
+        });
+
         mapView.addEventHandler(MarkerEvent.MARKER_CLICKED, event -> {
             event.consume();
+            Incident incident = markerToIncident.get(event.getMarker().getId());
             incidentInfo.setExpanded(true);
-            incidentType.setText("Wypadek");
-            labelEvent.setText("Event: marker clicked: " + event.getMarker().getId());
-        });
-        mapView.addEventHandler(MarkerEvent.MARKER_RIGHTCLICKED, event -> {
-            event.consume();
-            labelEvent.setText("Event: marker right clicked: " + event.getMarker().getId());
+            incidentType.setText("Incident: " + incident.properties.events[0].description);
+            incidentFrom.setText("From: " + incident.properties.from);
+            incidentTo.setText("To: " + incident.properties.to);
+            incidentRoad.setText("Road numbers: " + incident.properties.roadNumbers.toString()
+                    .replace("[","").replace("]",""));
+            incidentStart.setText("Start time: " + incident.properties.startTime.format(format));
+            incidentEnd.setText("End time: " + incident.properties.endTime.format(format));
         });
 
         logger.debug("map handlers initialized");
@@ -206,17 +227,7 @@ public class Controller {
         logger.debug("setting center and enabling controls...");
         // starting coordinates and zoom
         mapView.setZoom(ZOOM_DEFAULT);
-        mapView.setCenter(coordWarsaw);
-
-        // add markers
-        mapView.addMarker(markerPalace);
-
-        // zoom listener
-        mapView.zoomProperty().addListener((observableValue, oldZoom, currZoom) -> {
-            if((double)currZoom < (double)oldZoom) updateMarkers();
-        }
-        );
-
+        mapView.setCenter(coordPalace);
 
         // enable the controls
         setControlsDisable(false);
@@ -274,21 +285,113 @@ public class Controller {
     @FXML
     private void zoomOut() {
         mapView.setZoom(mapView.getZoom() - 1);
-        updateMarkers();
     }
 
-    public void addMarker() {
-        Coordinate testCoord = new Coordinate(52.25, 21.006389);
-        Marker testMarker = Marker.createProvided(Marker.Provided.RED).setPosition(testCoord).setVisible(
-                true);
-//        markerList.add(testMarker);
-        mapView.addMarker(testMarker);
-        logger.info("marker added");
+    public void addMarkers(Extent extent) {
+        double minLat = extent.getMin().getLatitude() - 0.05;
+        double minLon = extent.getMin().getLongitude() - 0.05;
+        double maxLat = extent.getMax().getLatitude() + 0.05;
+        double maxLon = extent.getMax().getLongitude() + 0.05;
+        if((maxLat - minLat) * (maxLon - minLon) > 1) {
+            logger.info("area for loading is too big");
+            return; // too many square kilometers
+        }
+        logger.info("loading incidents for minLat:" + minLat + " minLon:" + minLon + " maxLat:" + maxLat + " maxLon:" + maxLon);
+        List<Incident> incidents = GetData.get(minLon, minLat, maxLon, maxLat);
+        assert incidents != null; // TODO do something about this
+        for (Incident incident:incidents) {
+            if(markerMap.containsKey(incident.properties.id)) continue;
+            Marker marker;
+            List<Coordinate> coordList = Arrays.stream(incident.geometry.coordinates)
+                    .map(d -> new Coordinate(d[1], d[0])).collect(Collectors.toList());
+            CoordinateLine line = new CoordinateLine(coordList).setVisible(true);
+            switch (incident.properties.events[0].iconCategory) {
+                case 0:
+                    marker = new Marker(getClass().getResource("/img/other.png"), -16, -16);
+                    line.setColor(Color.BLUE);
+                    break;
+                case 1:
+                    marker = new Marker(getClass().getResource("/img/accident.png"), -16, -16);
+                    line.setColor(Color.RED);
+                    break;
+                case 2:
+                    marker = new Marker(getClass().getResource("/img/fog-lamp.png"), -16, -16);
+                    line.setColor(Color.ORANGE);
+                    break;
+                case 3:
+                    marker = new Marker(getClass().getResource("/img/caution.png"), -16, -16);
+                    line.setColor(Color.ORANGE);
+                    break;
+                case 4:
+                    marker = new Marker(getClass().getResource("/img/rainy.png"), -16, -16);
+                    line.setColor(Color.YELLOWGREEN);
+                    break;
+                case 5:
+                    marker = new Marker(getClass().getResource("/img/ice.png"), -16, -16);
+                    line.setColor(Color.ORANGE);
+                    break;
+                case 6:
+                    marker = new Marker(getClass().getResource("/img/traffic-jam.png"), -16, -16);
+                    line.setColor(Color.ORANGERED);
+                    break;
+                case 7:
+                    marker = new Marker(getClass().getResource("/img/lane-closed.png"), -16, -16);
+                    line.setColor(Color.RED);
+                    break;
+                case 8:
+                    marker = new Marker(getClass().getResource("/img/road-closed.png"), -16, -16);
+                    line.setColor(Color.RED);
+                    break;
+                case 9:
+                    marker = new Marker(getClass().getResource("/img/road-work.png"), -16, -16);
+                    line.setColor(Color.RED);
+                    break;
+                case 10:
+                    marker = new Marker(getClass().getResource("/img/wind.png"), -16, -16);
+                    line.setColor(Color.YELLOWGREEN);
+                    break;
+                case 11:
+                    marker = new Marker(getClass().getResource("/img/flood.png"), -16, -16);
+                    line.setColor(Color.RED);
+                    break;
+                case 14:
+                    marker = new Marker(getClass().getResource("/img/brokendown.png"), -16, -16);
+                    line.setColor(Color.YELLOWGREEN);
+                    break;
+                default:
+                    return;
+            }
+            int med = Math.floorDiv(incident.geometry.coordinates.length, 2);
+            Coordinate markCoord = new Coordinate(incident.geometry.coordinates[med][1], incident.geometry.coordinates[med][0]);
+            marker.setPosition(markCoord).setVisible(true);
+
+            markerMap.put(incident.properties.id, new Triplet<>(incident, marker, line));
+            mapView.addCoordinateLine(line);
+            mapView.addMarker(marker);
+            markerToIncident.put(marker.getId(), incident);
+        }
     }
 
+    private boolean newExtentBigger(Extent newExtent) {
+        if(oldExtent == null) return true;
+        int point = 10;
+        double minLat = Math.round(oldExtent.getMin().getLatitude()*point);
+        double minLon = Math.round(oldExtent.getMin().getLongitude()*point);
+        double maxLat = Math.round(oldExtent.getMax().getLatitude()*point);
+        double maxLon = Math.round(oldExtent.getMax().getLongitude()*point);
 
-    private void updateMarkers() {
+        double minLat2 = Math.round(newExtent.getMin().getLatitude()*point);
+        double minLon2 = Math.round(newExtent.getMin().getLongitude()*point);
+        double maxLat2 = Math.round(newExtent.getMax().getLatitude()*point);
+        double maxLon2 = Math.round(newExtent.getMax().getLongitude()*point);
+
+        return !(new Rectangle2D(minLon, maxLat, maxLon - minLon, maxLat - minLat)
+                .contains(new Rectangle2D(minLon2, maxLat2, maxLon2 - minLon2, maxLat2 - minLat2)));
+    }
+
+    private void updateMarkers(Extent extent) {
         logger.info("updating markers...");
+        Platform.runLater(() -> addMarkers(extent));
     }
 
     @FXML
@@ -299,5 +402,14 @@ public class Controller {
     @FXML
     private void clearMap() {
         logger.info("clearing map...");
+        markerMap.forEach((id, t) -> {mapView.removeMarker(t.getSecond()); mapView.removeCoordinateLine(t.getThird());});
+        markerMap.clear();
+        markerToIncident.clear();
+        logger.info("map cleared");
+    }
+
+    @FXML
+    private void updateToggle() {
+        updateButton.setText("Marker updates: " + (updateButton.isSelected()? "OFF" : "ON"));
     }
 }

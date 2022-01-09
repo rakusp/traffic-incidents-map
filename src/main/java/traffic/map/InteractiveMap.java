@@ -56,16 +56,6 @@ public class InteractiveMap extends Application {
         primaryStage.show();
 
         logger.debug("application start method finished.");
-
-        // adding markes at runtime test
-//        scene.setOnMouseClicked(mouseEvent -> controller.addMarker());
-        primaryStage.addEventHandler(MouseDragEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseDragEvent) {
-                System.out.println("test");
-                controller.addMarker();
-            }
-        });
     }
 }
 

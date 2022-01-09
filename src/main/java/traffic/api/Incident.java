@@ -8,18 +8,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Incident {
     @JsonProperty
-    Geometry geometry;
+    public Geometry geometry;
     @JsonProperty
-    String type;
+    public String type;
     @JsonProperty
-    Properties properties;
+    public Properties properties;
 
 
     public static class Geometry {
         @JsonProperty
-        Double[][] coordinates;
+        public Double[][] coordinates;
         @JsonProperty
-        String type;
+        public String type;
 
         @Override
         public String toString() {
@@ -32,29 +32,29 @@ public class Incident {
 
     public static class Properties {
         @JsonProperty
-        String id;
+        public String id;
         @JsonProperty
-        List<String> roadNumbers;
+        public List<String> roadNumbers;
         @JsonProperty
-        String timeValidity;
+        public String timeValidity;
         @JsonProperty
-        LocalDateTime startTime;
+        public LocalDateTime startTime;
         @JsonProperty
-        String from;
+        public String from;
         @JsonProperty
-        LocalDateTime endTime;
+        public LocalDateTime endTime;
         @JsonProperty
-        String to;
+        public String to;
         @JsonProperty
-        Events[] events;
+        public Events[] events;
 
         public static class Events {
             @JsonProperty
-            Integer code;
+            public Integer code;
             @JsonProperty
-            String description;
+            public String description;
             @JsonProperty
-            Integer iconCategory;
+            public Integer iconCategory;
 
             @Override
             public String toString() {
@@ -90,5 +90,4 @@ public class Incident {
                 ", properties=" + properties +
                 '}';
     }
-
 }
