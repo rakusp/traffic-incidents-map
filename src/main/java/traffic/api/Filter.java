@@ -3,24 +3,16 @@ package traffic.api;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Filter {
 
 
-    public static List<Incident> byIncidentDescription(String eventDescription, List<Incident> incidents) {
+    public static List<Incident> exceptIncidentWithType(Integer incidentType, List<Incident> incidents) {
 
-        List<Incident> searchedIncidents = new ArrayList<>();
-
-        for (Incident i : incidents) {
-            List<Incident.Properties.Events> events = List.of(i.properties.events);
-            for (Incident.Properties.Events e : events) {
-                if (e.description.equals(eventDescription)) {
-                    searchedIncidents.add(i);
-                    break;
-                }
-            }
-        }
-        return searchedIncidents;
+        return incidents.stream()
+                .filter(i -> !(i.properties.events[0].iconCategory.equals(incidentType)))
+                .collect(Collectors.toList());
     }
 
     public static List<Incident> endsBefore(LocalDateTime deadLine, List<Incident> incidents) {

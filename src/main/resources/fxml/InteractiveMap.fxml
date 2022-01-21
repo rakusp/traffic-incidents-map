@@ -6,13 +6,9 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.web.WebView?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.control.skin.ProgressIndicatorSkin.IndeterminateSpinner.IndicatorPaths?>
 <?import javafx.scene.text.Text?>
-<?import javafx.scene.text.TextFlow?>
-<?import javafx.scene.control.cell.TextFieldTreeCell?>
+
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0"
             prefWidth="1200.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="traffic.map.Controller">
@@ -52,11 +48,50 @@
                         <Text fx:id="incidentRoad" text="Road numbers:"/>
                         <Text fx:id="incidentStart" text="Start time:"/>
                         <Text fx:id="incidentEnd" text="End time:"/>
+                        <Button text="Clear Incident Info" onAction="#clearIncidnet"
+                                maxWidth="Infinity"/>
                     </VBox>
+
                 </TitledPane>
                 <TitledPane fx:id="optionsFilters" text="Filters">
-                    <VBox spacing="10.0">
-                        <Button text="Apply filters" onAction="#applyFilters" maxWidth="Infinity"/>
+                    <VBox>
+                        <TitledPane fx:id="checkBoxesIncidents" text="Incidents" expanded="false">
+                            <VBox spacing="10.0">
+                                <CheckBox fx:id="unknown" selected="true" text="Unknown" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="accident" selected="true" text="Accident" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="fog" selected="true" text="Fog" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="dangerousConditions" selected="true" text="Dangerous Conditions"
+                                          onAction="#applyFilters" maxWidth="Infinity"/>
+                                <CheckBox fx:id="rain" selected="true" text="Rain" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="ice" selected="true" text="Ice" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="jam" selected="true" text="Jam" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="laneClosed" selected="true" text="Lane Closed" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="roadClosed" selected="true" text="Road Closed" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="roadWorks" selected="true" text="Road Works" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="wind" selected="true" text="Wind" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="flooding" selected="true" text="Flooding" onAction="#applyFilters"
+                                          maxWidth="Infinity"/>
+                                <CheckBox fx:id="brokenDownVehicle" selected="true" text="Broken Down Vehicle"
+                                          onAction="#applyFilters" maxWidth="Infinity"/>
+                                <HBox spacing="10.0">
+                                    <Button text="Select all" onAction="#selectAll"/>
+                                    <Button text="Unselect all" onAction="#unselectAll"/>
+                                </HBox>
+                            </VBox>
+                        </TitledPane>
+                        <TitledPane text="Other filters" expanded="false">
+                            <Button text="TODO"/>
+                        </TitledPane>
                     </VBox>
                 </TitledPane>
                 <TitledPane fx:id="mapControls" text="Settings">

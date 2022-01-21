@@ -16,11 +16,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import traffic.api.Filter;
 import traffic.api.GetData;
 import traffic.api.Incident;
 import traffic.triplet.Triplet;
@@ -36,6 +35,7 @@ import java.util.stream.Collectors;
 public class Controller {
 
     private static final Logger logger = LoggerFactory.getLogger(Controller.class);
+
 
     // coordinates
     private static final Coordinate coordWarsaw = new Coordinate(52.237049, 21.017532);
@@ -64,15 +64,21 @@ public class Controller {
     @FXML
     private TitledPane optionsFilters;
 
-    /** Label to display the current center */
+    /**
+     * Label to display the current center
+     */
     @FXML
     private Label labelCenter;
 
-    /** Label to display the current extent */
+    /**
+     * Label to display the current extent
+     */
     @FXML
     private Label labelExtent;
 
-    /** Label to display the current zoom */
+    /**
+     * Label to display the current zoom
+     */
     @FXML
     private Label labelZoom;
 
@@ -91,9 +97,6 @@ public class Controller {
     @FXML
     private ToggleButton updateButton;
 
-    @FXML
-    private StackPane stackPane;
-
     private DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
     @FXML
     private TitledPane incidentInfo;
@@ -109,7 +112,32 @@ public class Controller {
     private Text incidentStart;
     @FXML
     private Text incidentEnd;
-
+    @FXML
+    private CheckBox unknown;
+    @FXML
+    private CheckBox accident;
+    @FXML
+    private CheckBox fog;
+    @FXML
+    private CheckBox dangerousConditions;
+    @FXML
+    private CheckBox rain;
+    @FXML
+    private CheckBox ice;
+    @FXML
+    private CheckBox jam;
+    @FXML
+    private CheckBox laneClosed;
+    @FXML
+    private CheckBox roadClosed;
+    @FXML
+    private CheckBox roadWorks;
+    @FXML
+    private CheckBox wind;
+    @FXML
+    private CheckBox flooding;
+    @FXML
+    private CheckBox brokenDownVehicle;
 
     // parameters for XYZ server
     private XYZParam xyzParams = new XYZParam()
@@ -124,8 +152,7 @@ public class Controller {
      * called after the fxml is loaded and all objects are created. This is not called initialize any more,
      * because we need to pass in the projection before initializing.
      *
-     * @param projection
-     *     the projection to use in the map.
+     * @param projection the projection to use in the map.
      */
     public void initMapAndControls(Projection projection) {
         logger.debug("begin initialize");
@@ -177,7 +204,7 @@ public class Controller {
         logger.debug("starting image initialization");
         try {
             initImages();
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.warn("FAILED TO LOAD IMAGES");
         }
 
@@ -193,10 +220,10 @@ public class Controller {
         mapView.addEventHandler(MapViewEvent.MAP_BOUNDING_EXTENT, event -> {
             event.consume();
             labelExtent.setText(event.getExtent().toString());
-            if(newExtentBigger(event.getExtent())) {
+            if (newExtentBigger(event.getExtent())) {
                 logger.info("extent bounds expanded");
                 oldExtent = event.getExtent();
-                if(!updateButton.isSelected()) updateMarkers(oldExtent);
+                if (!updateButton.isSelected()) updateMarkers(oldExtent);
             }
         });
 
@@ -208,7 +235,7 @@ public class Controller {
             incidentFrom.setText("From: " + incident.properties.from);
             incidentTo.setText("To: " + incident.properties.to);
             incidentRoad.setText("Road numbers: " + incident.properties.roadNumbers.toString()
-                    .replace("[","").replace("]",""));
+                    .replace("[", "").replace("]", ""));
             incidentStart.setText("Start time: " + incident.properties.startTime.format(format));
             incidentEnd.setText("End time: " + incident.properties.endTime.format(format));
         });
@@ -287,20 +314,22 @@ public class Controller {
         mapView.setZoom(mapView.getZoom() - 1);
     }
 
+
     public void addMarkers(Extent extent) {
         double minLat = extent.getMin().getLatitude() - 0.05;
         double minLon = extent.getMin().getLongitude() - 0.05;
         double maxLat = extent.getMax().getLatitude() + 0.05;
         double maxLon = extent.getMax().getLongitude() + 0.05;
-        if((maxLat - minLat) * (maxLon - minLon) > 1) {
+        if ((maxLat - minLat) * (maxLon - minLon) > 1) {
             logger.info("area for loading is too big");
             return; // too many square kilometers
         }
         logger.info("loading incidents for minLat:" + minLat + " minLon:" + minLon + " maxLat:" + maxLat + " maxLon:" + maxLon);
         List<Incident> incidents = GetData.get(minLon, minLat, maxLon, maxLat);
+        incidents = selectedIncidents(incidents);
         assert incidents != null; // TODO do something about this
-        for (Incident incident:incidents) {
-            if(markerMap.containsKey(incident.properties.id)) continue;
+        for (Incident incident : incidents) {
+            if (markerMap.containsKey(incident.properties.id)) continue;
             Marker marker;
             List<Coordinate> coordList = Arrays.stream(incident.geometry.coordinates)
                     .map(d -> new Coordinate(d[1], d[0])).collect(Collectors.toList());
@@ -373,17 +402,17 @@ public class Controller {
     }
 
     private boolean newExtentBigger(Extent newExtent) {
-        if(oldExtent == null) return true;
+        if (oldExtent == null) return true;
         int point = 10;
-        double minLat = Math.round(oldExtent.getMin().getLatitude()*point);
-        double minLon = Math.round(oldExtent.getMin().getLongitude()*point);
-        double maxLat = Math.round(oldExtent.getMax().getLatitude()*point);
-        double maxLon = Math.round(oldExtent.getMax().getLongitude()*point);
+        double minLat = Math.round(oldExtent.getMin().getLatitude() * point);
+        double minLon = Math.round(oldExtent.getMin().getLongitude() * point);
+        double maxLat = Math.round(oldExtent.getMax().getLatitude() * point);
+        double maxLon = Math.round(oldExtent.getMax().getLongitude() * point);
 
-        double minLat2 = Math.round(newExtent.getMin().getLatitude()*point);
-        double minLon2 = Math.round(newExtent.getMin().getLongitude()*point);
-        double maxLat2 = Math.round(newExtent.getMax().getLatitude()*point);
-        double maxLon2 = Math.round(newExtent.getMax().getLongitude()*point);
+        double minLat2 = Math.round(newExtent.getMin().getLatitude() * point);
+        double minLon2 = Math.round(newExtent.getMin().getLongitude() * point);
+        double maxLat2 = Math.round(newExtent.getMax().getLatitude() * point);
+        double maxLon2 = Math.round(newExtent.getMax().getLongitude() * point);
 
         return !(new Rectangle2D(minLon, maxLat, maxLon - minLon, maxLat - minLat)
                 .contains(new Rectangle2D(minLon2, maxLat2, maxLon2 - minLon2, maxLat2 - minLat2)));
@@ -397,12 +426,19 @@ public class Controller {
     @FXML
     private void applyFilters() {
         logger.info("applying filters...");
+        clearMap();
+        updateMarkers(oldExtent);
+        logger.info("filters applyed");
+
     }
 
     @FXML
     private void clearMap() {
         logger.info("clearing map...");
-        markerMap.forEach((id, t) -> {mapView.removeMarker(t.getSecond()); mapView.removeCoordinateLine(t.getThird());});
+        markerMap.forEach((id, t) -> {
+            mapView.removeMarker(t.getSecond());
+            mapView.removeCoordinateLine(t.getThird());
+        });
         markerMap.clear();
         markerToIncident.clear();
         logger.info("map cleared");
@@ -410,6 +446,96 @@ public class Controller {
 
     @FXML
     private void updateToggle() {
-        updateButton.setText("Marker updates: " + (updateButton.isSelected()? "OFF" : "ON"));
+        updateButton.setText("Marker updates: " + (updateButton.isSelected() ? "OFF" : "ON"));
+    }
+
+    @FXML
+    private void clearIncidnet() {
+        logger.info("clearing incident...");
+        incidentType.setText("Incident: ");
+        incidentFrom.setText("From: ");
+        incidentTo.setText("To: ");
+        incidentRoad.setText("Road numbers: ");
+        incidentStart.setText("Start time: ");
+        incidentEnd.setText("End time: ");
+        logger.info("incident cleared");
+    }
+
+    private List<Incident> selectedIncidents(List<Incident> incidents) {
+        if (!unknown.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(0, incidents);
+        }
+        if (!accident.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(1, incidents);
+        }
+        if (!fog.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(2, incidents);
+        }
+        if (!dangerousConditions.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(3, incidents);
+        }
+        if (!rain.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(4, incidents);
+        }
+        if (!ice.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(5, incidents);
+        }
+        if (!jam.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(6, incidents);
+        }
+        if (!laneClosed.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(7, incidents);
+        }
+        if (!roadClosed.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(8, incidents);
+        }
+        if (!roadWorks.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(9, incidents);
+        }
+        if (!wind.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(10, incidents);
+        }
+        if (!flooding.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(11, incidents);
+        }
+        if (!brokenDownVehicle.isSelected()) {
+            incidents = Filter.exceptIncidentWithType(14, incidents);
+        }
+        return incidents;
+    }
+
+
+    public void selectAll() {
+        unknown.setSelected(true);
+        accident.setSelected(true);
+        fog.setSelected(true);
+        dangerousConditions.setSelected(true);
+        rain.setSelected(true);
+        ice.setSelected(true);
+        jam.setSelected(true);
+        laneClosed.setSelected(true);
+        roadClosed.setSelected(true);
+        roadWorks.setSelected(true);
+        wind.setSelected(true);
+        flooding.setSelected(true);
+        brokenDownVehicle.setSelected(true);
+        applyFilters();
+    }
+
+    public void unselectAll() {
+        unknown.setSelected(false);
+        accident.setSelected(false);
+        fog.setSelected(false);
+        dangerousConditions.setSelected(false);
+        rain.setSelected(false);
+        ice.setSelected(false);
+        jam.setSelected(false);
+        laneClosed.setSelected(false);
+        roadClosed.setSelected(false);
+        roadWorks.setSelected(false);
+        wind.setSelected(false);
+        flooding.setSelected(false);
+        brokenDownVehicle.setSelected(false);
+        applyFilters();
     }
 }
