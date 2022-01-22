@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Text?>
-
+<?import javafx.scene.layout.Region?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0"
             prefWidth="1200.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="traffic.map.Controller">
@@ -48,14 +48,15 @@
                         <Text fx:id="incidentRoad" text="Road numbers:"/>
                         <Text fx:id="incidentStart" text="Start time:"/>
                         <Text fx:id="incidentEnd" text="End time:"/>
+                        <Separator/>
                         <Button text="Clear Incident Info" onAction="#clearIncidnet"
                                 maxWidth="Infinity"/>
                     </VBox>
 
                 </TitledPane>
                 <TitledPane fx:id="optionsFilters" text="Filters">
-                    <VBox>
-                        <TitledPane fx:id="checkBoxesIncidents" text="Incidents" expanded="false">
+                    <VBox spacing="10.0">
+                        <TitledPane fx:id="checkBoxesIncidents" text="Incident type" expanded="false">
                             <VBox spacing="10.0">
                                 <CheckBox fx:id="unknown" selected="true" text="Unknown" onAction="#applyFilters"
                                           maxWidth="Infinity"/>
@@ -83,15 +84,30 @@
                                           maxWidth="Infinity"/>
                                 <CheckBox fx:id="brokenDownVehicle" selected="true" text="Broken Down Vehicle"
                                           onAction="#applyFilters" maxWidth="Infinity"/>
-                                <HBox spacing="10.0">
-                                    <Button text="Select all" onAction="#selectAll"/>
-                                    <Button text="Unselect all" onAction="#unselectAll"/>
-                                </HBox>
+                                <Button text="Select all" onAction="#selectAll" maxWidth="Infinity"/>
+                                <Button text="Unselect all" onAction="#unselectAll" maxWidth="Infinity"/>
                             </VBox>
                         </TitledPane>
-                        <TitledPane text="Other filters" expanded="false">
-                            <Button text="TODO"/>
+                        <TitledPane text="Incidents still active after given time" expanded="false">
+                            <VBox>
+                                <TextField fx:id="minutes" promptText="Minutes"/>
+                                <TextField fx:id="hours" promptText="Hours"/>
+                                <TextField fx:id="days" promptText="Days"/>
+                                <TextField fx:id="months" promptText="Months"/>
+                                <TextField fx:id="years" promptText="Years"/>
+                                <ToggleButton fx:id="timeButton" text="Apply" maxWidth="Infinity"/>
+                            </VBox>
                         </TitledPane>
+                        <Separator/>
+                        <ToggleButton fx:id="onlyActive" text="Show only active incidents" onAction="#applyFilters"
+                        maxWidth="Infinity"/>
+                        <Separator/>
+                        <HBox>
+                            <TextField fx:id="onRoad" promptText="Type road number"/>
+                            <ToggleButton fx:id="roadButton" text="Show only incidents on this road"/>
+                        </HBox>
+                        <Separator/>
+                        <Button fx:id="resetButton" text="Reset all filters" onAction="#resetFilters" maxWidth="Infinity"/>
                     </VBox>
                 </TitledPane>
                 <TitledPane fx:id="mapControls" text="Settings">

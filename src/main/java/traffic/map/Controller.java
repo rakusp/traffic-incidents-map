@@ -6,6 +6,10 @@ import com.sothawo.mapjfx.event.MarkerEvent;
 import com.sothawo.mapjfx.offline.OfflineCache;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -138,6 +142,31 @@ public class Controller {
     private CheckBox flooding;
     @FXML
     private CheckBox brokenDownVehicle;
+    @FXML
+    private ToggleButton onlyActive;
+    @FXML
+    private TextField onRoad;
+    @FXML
+    private ToggleButton roadButton;
+    @FXML
+    private TextField minutes;
+    @FXML
+    private TextField hours;
+    @FXML
+    private TextField days;
+    @FXML
+    private TextField months;
+    @FXML
+    private TextField years;
+    @FXML
+    private ToggleButton timeButton;
+    @FXML
+    private Button resetButton;
+    private int minVal = 0;
+    private int houVal = 0;
+    private int dayVal = 0;
+    private int monVal = 0;
+    private int yeaVal = 0;
 
     // parameters for XYZ server
     private XYZParam xyzParams = new XYZParam()
@@ -210,6 +239,34 @@ public class Controller {
 
         // zoom buttons alignment
         StackPane.setAlignment(zoomControl, Pos.TOP_RIGHT);
+
+        roadButton.selectedProperty().addListener(observable -> applyFilters());
+
+        onRoad.textProperty().addListener((observable -> roadButton.setSelected(false)));
+
+        timeButton.selectedProperty().addListener(observable -> applyFilters());
+
+        ChangeListener timeChange = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observableValue, Object o, Object t1) {
+                timeButton.setSelected(false);
+            }
+        };
+
+        minutes.textProperty().addListener(timeChange);
+        hours.textProperty().addListener(timeChange);
+        days.textProperty().addListener(timeChange);
+        months.textProperty().addListener(timeChange);
+        years.textProperty().addListener(timeChange);
+
+
+        numericOnly(minutes);
+        numericOnly(hours);
+        numericOnly(days);
+        numericOnly(months);
+        numericOnly(years);
+
+        resetButton.setStyle("-fx-font-weight: bold;");
 
         logger.debug("initialization finished");
     }
@@ -327,6 +384,16 @@ public class Controller {
         logger.info("loading incidents for minLat:" + minLat + " minLon:" + minLon + " maxLat:" + maxLat + " maxLon:" + maxLon);
         List<Incident> incidents = GetData.get(minLon, minLat, maxLon, maxLat);
         incidents = selectedIncidents(incidents);
+        if(onlyActive.isSelected()){
+            incidents = Filter.stillTakingPlace(incidents);
+        }
+        if(roadButton.isSelected()){
+            incidents = Filter.incidentsOnRoad(onRoad.getText(),incidents);
+        }
+        if(timeButton.isSelected()){
+            setTime();
+            incidents = Filter.incidentsAfterGivenTime(yeaVal,monVal,dayVal,houVal,minVal,incidents);
+        }
         assert incidents != null; // TODO do something about this
         for (Incident incident : incidents) {
             if (markerMap.containsKey(incident.properties.id)) continue;
@@ -538,4 +605,57 @@ public class Controller {
         brokenDownVehicle.setSelected(false);
         applyFilters();
     }
+
+    public static void numericOnly(final TextField field) {
+        field.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(
+                    ObservableValue<? extends String> observable,
+                    String oldValue, String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    field.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
+    }
+
+    private void setTime(){
+        if(minutes.getText().isEmpty()){
+            minVal = 0;
+        }else{
+            minVal = Integer.valueOf(minutes.getText());
+        }
+        if(hours.getText().isEmpty()){
+            houVal = 0;
+        }else{
+            houVal = Integer.valueOf(hours.getText());
+        }
+        if(days.getText().isEmpty()){
+            dayVal = 0;
+        }else{
+            dayVal = Integer.valueOf(days.getText());
+        }
+        if(months.getText().isEmpty()){
+            monVal = 0;
+        }else{
+            monVal = Integer.valueOf(months.getText());
+        }
+        if(years.getText().isEmpty()){
+            yeaVal = 0;
+        }else{
+            yeaVal = Integer.valueOf(years.getText());
+        }
+        }
+
+    public void resetFilters() {
+        selectAll();
+        minutes.setText("");
+        hours.setText("");
+        days.setText("");
+        months.setText("");
+        years.setText("");
+        onlyActive.setSelected(false);
+        onRoad.setText("");
+    }
 }
+
