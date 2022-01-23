@@ -22,15 +22,15 @@ public class Json {
         return objectMapper;
     }
 
-    public static JsonNode parse(String src) throws JsonProcessingException {
+    private static JsonNode parse(String src) throws JsonProcessingException {
         return objectMapper.readTree(src);
     }
 
-    public static <A> A fromJson(JsonNode node, Class<A> clazz) throws JsonProcessingException {
+    private static <A> A fromJson(JsonNode node, Class<A> clazz) throws JsonProcessingException {
         return objectMapper.treeToValue(node, clazz);
     }
 
-    public static String jsonToString(JSONObject jsonObject) {
+    private static String jsonToString(JSONObject jsonObject) {
         return jsonObject.toString(2);
     }
 

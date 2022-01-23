@@ -9,7 +9,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
 import org.json.*;
 
 public class GetData {

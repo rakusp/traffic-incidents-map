@@ -3,13 +3,9 @@ package traffic.map;
 import com.sothawo.mapjfx.*;
 import com.sothawo.mapjfx.event.MapViewEvent;
 import com.sothawo.mapjfx.event.MarkerEvent;
-import com.sothawo.mapjfx.offline.OfflineCache;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -44,7 +40,6 @@ public class Controller {
 
 
     // coordinates
-    private static final Coordinate coordWarsaw = new Coordinate(52.237049, 21.017532);
     private static final Coordinate coordPalace = new Coordinate(52.231667, 21.006389);
 
     // default zoom level
@@ -204,20 +199,8 @@ public class Controller {
      *
      * @param projection the projection to use in the map.
      */
-    public void initMapAndControls(Projection projection) {
+    protected void initMapAndControls(Projection projection) {
         logger.debug("begin initialize");
-
-        // init MapView-Cache
-        final OfflineCache offlineCache = mapView.getOfflineCache();
-        final String cacheDir = System.getProperty("java.io.tmpdir") + "/mapjfx-cache";
-//        logger.info("using dir for cache: " + cacheDir);
-//        try {
-//            Files.createDirectories(Paths.get(cacheDir));
-//            offlineCache.setCacheDirectory(cacheDir);
-//            offlineCache.setActive(true);
-//        } catch (IOException e) {
-//            logger.warn("could not activate offline cache", e);
-//        }
 
         // set the custom css file for the MapView
         mapView.setCustomMapviewCssURL(getClass().getResource("/custom_mapview.css"));
@@ -267,12 +250,7 @@ public class Controller {
 
         timeButton.selectedProperty().addListener(observable -> applyFilters());
 
-        ChangeListener timeChange = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observableValue, Object o, Object t1) {
-                timeButton.setSelected(false);
-            }
-        };
+        ChangeListener timeChange = (observableValue, o, t1) -> timeButton.setSelected(false);
 
         minutes.textProperty().addListener(timeChange);
         hours.textProperty().addListener(timeChange);
@@ -602,7 +580,8 @@ public class Controller {
     }
 
 
-    public void selectAll() {
+    @FXML
+    private void selectAll() {
         unknown.setSelected(true);
         accident.setSelected(true);
         fog.setSelected(true);
@@ -619,7 +598,8 @@ public class Controller {
         applyFilters();
     }
 
-    public void unselectAll() {
+    @FXML
+    private void unselectAll() {
         unknown.setSelected(false);
         accident.setSelected(false);
         fog.setSelected(false);
@@ -636,28 +616,10 @@ public class Controller {
         applyFilters();
     }
 
-    public static void numericOnly(final TextField field) {
-        field.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(
-                    ObservableValue<? extends String> observable,
-                    String oldValue, String newValue) {
-                if (!newValue.matches("\\d*")) {
-                    field.setText(newValue.replaceAll("[^\\d]", ""));
-                }
-            }
-        });
-    }
-
-    public static void floatOnly(final TextField field) {
-        field.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(
-                    ObservableValue<? extends String> observable,
-                    String oldValue, String newValue) {
-                if (!newValue.matches("\\d*")) {
-                    field.setText(newValue.replaceAll("[^\\d]", ""));
-                }
+    private static void numericOnly(final TextField field) {
+        field.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                field.setText(newValue.replaceAll("[^\\d]", ""));
             }
         });
     }
@@ -666,31 +628,32 @@ public class Controller {
         if (minutes.getText().isEmpty()) {
             minVal = 0;
         } else {
-            minVal = Integer.valueOf(minutes.getText());
+            minVal = Integer.parseInt(minutes.getText());
         }
         if (hours.getText().isEmpty()) {
             houVal = 0;
         } else {
-            houVal = Integer.valueOf(hours.getText());
+            houVal = Integer.parseInt(hours.getText());
         }
         if (days.getText().isEmpty()) {
             dayVal = 0;
         } else {
-            dayVal = Integer.valueOf(days.getText());
+            dayVal = Integer.parseInt(days.getText());
         }
         if (months.getText().isEmpty()) {
             monVal = 0;
         } else {
-            monVal = Integer.valueOf(months.getText());
+            monVal = Integer.parseInt(months.getText());
         }
         if (years.getText().isEmpty()) {
             yeaVal = 0;
         } else {
-            yeaVal = Integer.valueOf(years.getText());
+            yeaVal = Integer.parseInt(years.getText());
         }
     }
 
-    public void resetFilters() {
+    @FXML
+    private void resetFilters() {
         selectAll();
         minutes.setText("");
         hours.setText("");
@@ -701,7 +664,8 @@ public class Controller {
         onRoad.setText("");
     }
 
-    public void setCoordinates() {
+    @FXML
+    private void setCoordinates() {
         Double latitude = Double.valueOf(setLatDec.getText() + "." + setLatFraq.getText());
         Double longitude = Double.valueOf(setLongDec.getText() + "." + setLongFraq.getText());
         Coordinate coordinate = new Coordinate(latitude, longitude);
@@ -710,7 +674,8 @@ public class Controller {
 
     }
 
-    public void resetCoordinates() {
+    @FXML
+    private void resetCoordinates() {
         setLongDec.setText("");
         setLatDec.setText("");
         setLongFraq.setText("");
@@ -720,7 +685,8 @@ public class Controller {
 
     }
 
-    public void chooseFile() {
+    @FXML
+    private void chooseFile() {
         file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             String name = file.getName();
@@ -731,7 +697,8 @@ public class Controller {
         }
     }
 
-    public void writeToFile() {
+    @FXML
+    private void writeToFile() {
         if (file == null) {
             progres.setText("First, select your file");
         } else {
