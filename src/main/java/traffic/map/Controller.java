@@ -21,6 +21,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import traffic.api.Filter;
@@ -28,7 +30,7 @@ import traffic.api.GetData;
 import traffic.api.Incident;
 import traffic.triplet.Triplet;
 
-import java.io.File;
+import java.io.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -162,6 +164,25 @@ public class Controller {
     private ToggleButton timeButton;
     @FXML
     private Button resetButton;
+    @FXML
+    private TextField setLongDec;
+    @FXML
+    private TextField setLatDec;
+    @FXML
+    private TextField setLongFraq;
+    @FXML
+    private TextField setLatFraq;
+    @FXML
+    private Button resetCoordButton;
+    @FXML
+    private Button fileButton;
+    @FXML
+    private Text progres;
+
+    private final FileChooser fileChooser = new FileChooser();
+    private final Stage stage = new Stage();
+    private File file;
+
     private int minVal = 0;
     private int houVal = 0;
     private int dayVal = 0;
@@ -265,8 +286,17 @@ public class Controller {
         numericOnly(days);
         numericOnly(months);
         numericOnly(years);
+        numericOnly(setLatDec);
+        numericOnly(setLongDec);
+        numericOnly(setLatFraq);
+        numericOnly(setLongFraq);
 
         resetButton.setStyle("-fx-font-weight: bold;");
+        resetCoordButton.setStyle("-fx-font-weight: bold;");
+
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
+        fileChooser.getExtensionFilters().add(extFilter);
+
 
         logger.debug("initialization finished");
     }
@@ -384,15 +414,15 @@ public class Controller {
         logger.info("loading incidents for minLat:" + minLat + " minLon:" + minLon + " maxLat:" + maxLat + " maxLon:" + maxLon);
         List<Incident> incidents = GetData.get(minLon, minLat, maxLon, maxLat);
         incidents = selectedIncidents(incidents);
-        if(onlyActive.isSelected()){
+        if (onlyActive.isSelected()) {
             incidents = Filter.stillTakingPlace(incidents);
         }
-        if(roadButton.isSelected()){
-            incidents = Filter.incidentsOnRoad(onRoad.getText(),incidents);
+        if (roadButton.isSelected()) {
+            incidents = Filter.incidentsOnRoad(onRoad.getText(), incidents);
         }
-        if(timeButton.isSelected()){
+        if (timeButton.isSelected()) {
             setTime();
-            incidents = Filter.incidentsAfterGivenTime(yeaVal,monVal,dayVal,houVal,minVal,incidents);
+            incidents = Filter.incidentsAfterGivenTime(yeaVal, monVal, dayVal, houVal, minVal, incidents);
         }
         assert incidents != null; // TODO do something about this
         for (Incident incident : incidents) {
@@ -619,33 +649,46 @@ public class Controller {
         });
     }
 
-    private void setTime(){
-        if(minutes.getText().isEmpty()){
+    public static void floatOnly(final TextField field) {
+        field.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(
+                    ObservableValue<? extends String> observable,
+                    String oldValue, String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    field.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
+    }
+
+    private void setTime() {
+        if (minutes.getText().isEmpty()) {
             minVal = 0;
-        }else{
+        } else {
             minVal = Integer.valueOf(minutes.getText());
         }
-        if(hours.getText().isEmpty()){
+        if (hours.getText().isEmpty()) {
             houVal = 0;
-        }else{
+        } else {
             houVal = Integer.valueOf(hours.getText());
         }
-        if(days.getText().isEmpty()){
+        if (days.getText().isEmpty()) {
             dayVal = 0;
-        }else{
+        } else {
             dayVal = Integer.valueOf(days.getText());
         }
-        if(months.getText().isEmpty()){
+        if (months.getText().isEmpty()) {
             monVal = 0;
-        }else{
+        } else {
             monVal = Integer.valueOf(months.getText());
         }
-        if(years.getText().isEmpty()){
+        if (years.getText().isEmpty()) {
             yeaVal = 0;
-        }else{
+        } else {
             yeaVal = Integer.valueOf(years.getText());
         }
-        }
+    }
 
     public void resetFilters() {
         selectAll();
@@ -656,6 +699,59 @@ public class Controller {
         years.setText("");
         onlyActive.setSelected(false);
         onRoad.setText("");
+    }
+
+    public void setCoordinates() {
+        Double latitude = Double.valueOf(setLatDec.getText() + "." + setLatFraq.getText());
+        Double longitude = Double.valueOf(setLongDec.getText() + "." + setLongFraq.getText());
+        Coordinate coordinate = new Coordinate(latitude, longitude);
+        mapView.setZoom(9);
+        mapView.setCenter(coordinate);
+
+    }
+
+    public void resetCoordinates() {
+        setLongDec.setText("");
+        setLatDec.setText("");
+        setLongFraq.setText("");
+        setLatFraq.setText("");
+        mapView.setCenter(coordPalace);
+        mapView.setZoom(ZOOM_DEFAULT);
+
+    }
+
+    public void chooseFile() {
+        file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            String name = file.getName();
+            if (file.getName().length() > 20) {
+                name = file.getName().substring(0, 20) + "...";
+            }
+            fileButton.setText(name);
+        }
+    }
+
+    public void writeToFile() {
+        if (file == null) {
+            progres.setText("First, select your file");
+        } else {
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+                writer.append('\n');
+                writer.append("------------------------------------\n");
+                writer.append(incidentType.getText() + "\n");
+                writer.append(incidentFrom.getText() + "\n");
+                writer.append(incidentTo.getText() + "\n");
+                writer.append(incidentRoad.getText() + "\n");
+                writer.append(incidentStart.getText() + "\n");
+                writer.append(incidentEnd.getText() + "\n");
+                writer.append("------------------------------------\n");
+                writer.close();
+                progres.setText("Incident saved");
+            } catch (IOException e) {
+                progres.setText("Something went wrong :(");
+            }
+        }
     }
 }
 

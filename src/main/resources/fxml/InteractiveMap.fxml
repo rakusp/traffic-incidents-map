@@ -40,6 +40,29 @@
     <left>
         <ScrollPane fitToHeight="true" fitToWidth="true">
             <VBox fx:id="leftControls" BorderPane.alignment="CENTER" minWidth="250">
+                <TitledPane text="Set coordinates" expanded="false">
+                    <VBox spacing="5.0">
+                        <HBox spacing="5.0">
+                            <Text text="Latitude:"/>
+                            <Region/>
+                            <TextField fx:id="setLatDec"/>
+                            <Text text="."/>
+                            <TextField fx:id="setLatFraq"/>
+                        </HBox>
+                        <HBox spacing="5.0">
+                            <Text text="Longitude:"/>
+                            <Region/>
+                            <TextField fx:id="setLongDec"/>
+                            <Text text="."/>
+                            <TextField fx:id="setLongFraq"/>
+                        </HBox>
+                        <Button fx:id="coordButton" text="Go to coordinates" onAction="#setCoordinates"
+                                maxWidth="Infinity"/>
+                        <Separator/>
+                        <Button fx:id="resetCoordButton" text="Reset coordinates" onAction="#resetCoordinates"
+                                maxWidth="Infinity"/>
+                    </VBox>
+                </TitledPane>
                 <TitledPane fx:id="incidentInfo" text="Incident details">
                     <VBox spacing="5.0">
                         <Text fx:id="incidentType" text="Incident:"/>
@@ -51,6 +74,15 @@
                         <Separator/>
                         <Button text="Clear Incident Info" onAction="#clearIncidnet"
                                 maxWidth="Infinity"/>
+                        <TitledPane text="Save incidents" expanded="false">
+                            <VBox spacing="5.0">
+                                <Button fx:id="fileButton" text="Choose file" onAction="#chooseFile"
+                                        maxWidth="Infinity"/>
+                                <Button fx:id="fileWriteButton" text="Save Incident" onAction="#writeToFile"
+                                        maxWidth="Infinity"/>
+                                <Text fx:id="progres"/>
+                            </VBox>
+                        </TitledPane>
                     </VBox>
 
                 </TitledPane>
