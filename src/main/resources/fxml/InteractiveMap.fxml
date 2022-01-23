@@ -38,8 +38,8 @@
         </HBox>
     </bottom>
     <left>
-        <VBox fx:id="leftControls" BorderPane.alignment="CENTER" minWidth="250">
-            <children>
+        <ScrollPane fitToHeight="true" fitToWidth="true">
+            <VBox fx:id="leftControls" BorderPane.alignment="CENTER" minWidth="250">
                 <TitledPane fx:id="incidentInfo" text="Incident details">
                     <VBox spacing="5.0">
                         <Text fx:id="incidentType" text="Incident:"/>
@@ -100,14 +100,15 @@
                         </TitledPane>
                         <Separator/>
                         <ToggleButton fx:id="onlyActive" text="Show only active incidents" onAction="#applyFilters"
-                        maxWidth="Infinity"/>
+                                      maxWidth="Infinity"/>
                         <Separator/>
                         <HBox>
                             <TextField fx:id="onRoad" promptText="Type road number"/>
                             <ToggleButton fx:id="roadButton" text="Show only incidents on this road"/>
                         </HBox>
                         <Separator/>
-                        <Button fx:id="resetButton" text="Reset all filters" onAction="#resetFilters" maxWidth="Infinity"/>
+                        <Button fx:id="resetButton" text="Reset all filters" onAction="#resetFilters"
+                                maxWidth="Infinity"/>
                     </VBox>
                 </TitledPane>
                 <TitledPane fx:id="mapControls" text="Settings">
@@ -117,7 +118,7 @@
                         <Button fx:id="clearButton" text="Clear map" onAction="#clearMap" maxWidth="Infinity"/>
                     </VBox>
                 </TitledPane>
-            </children>
-        </VBox>
+            </VBox>
+        </ScrollPane>
     </left>
 </BorderPane>
