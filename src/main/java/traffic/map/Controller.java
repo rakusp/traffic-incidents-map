@@ -501,8 +501,10 @@ public class Controller {
     @FXML
     private void applyFilters() {
         logger.info("applying filters...");
-        clearMap();
-        updateMarkers(oldExtent);
+        if(!(updateButton.isSelected())) {
+            clearMap();
+            updateMarkers(oldExtent);
+        }
         logger.info("filters applyed");
 
     }
@@ -522,6 +524,10 @@ public class Controller {
     @FXML
     private void updateToggle() {
         updateButton.setText("Marker updates: " + (updateButton.isSelected() ? "OFF" : "ON"));
+        if (!(updateButton.isSelected())){
+            clearMap();
+            updateMarkers(oldExtent);
+        }
     }
 
     @FXML
